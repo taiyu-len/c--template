@@ -6,7 +6,7 @@
 
 # List of targets within src directory, and what kind of target it is.
 ######## executable targets
-target:=
+target:= solo
 
 ######## shared libraries. (libfoo.so)
 shared:=
