@@ -3,12 +3,13 @@
 .LIBPATTERNS:=
 .PHONY: all clean cleanall
 .SECONDARY: $(static:%=-l%) $(shared:%=-l%) $(shared) $(static)
+.DEFAULT_GOAL:=all
 all: $(target)
 
 SOURCES != find src     -regextype awk -regex '.*\.(c|cc|cpp)'
 HEADERS != find include -regextype awk -regex '.*\.(h|hh|hpp)'
 OBJECTS := $(addsuffix .o,$(basename $(SOURCES)))
-DEPENDS := $(addsuffix .mk,$(basename $(SOURCES)))
+DEPENDS := $(addsuffix .d,$(basename $(SOURCES)))
 COMPDB  := $(addsuffix .compdb,$(SOURCES) $(HEADERS))
 PATTERN := %
 LDFLAGS += -L $(realpath .)
@@ -16,9 +17,9 @@ CPPFLAGS += -Iinclude
 
 # Generate Dependencies
 -include $(DEPENDS)
-%.mk: %.c;   @$(CC)  $(CPPFLAGS) $< -MM -MT $*.o -MT $@ > $@
-%.mk: %.cc;  @$(CXX) $(CPPFLAGS) $< -MM -MT $*.o -MT $@ > $@
-%.mk: %.cpp; @$(CXX) $(CPPFLAGS) $< -MM -MT $*.o -MT $@ > $@
+%.d: %.c;   @$(CC)  $(CPPFLAGS) $< -MM -MT $*.o -MT $@ > $@
+%.d: %.cc;  @$(CXX) $(CPPFLAGS) $< -MM -MT $*.o -MT $@ > $@
+%.d: %.cpp; @$(CXX) $(CPPFLAGS) $< -MM -MT $*.o -MT $@ > $@
 
 # Generate compile_commands.json
 -include compdb.mk

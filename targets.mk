@@ -6,12 +6,12 @@
 
 # List of targets within src directory, and what kind of target it is.
 ######## executable targets
-target:= solo
+target:= solo foo
 
 ######## shared libraries. (libfoo.so)
-shared:=
+shared:= bar
 
 ######## static libraries. (libfoo.a)
-static:=
+static:= baz
 
 # TODO other configurations
