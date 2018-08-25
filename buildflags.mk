@@ -9,4 +9,5 @@ LINK.o    = $(LINK.cc)
 # Execute via LD_LIBRARY_PATH=.
 foo: -lbar -lbaz
 
-
+## Disable testing.
+# tested: CXXFLAGS += -DDOCTEST_CONFIG_DISABLE

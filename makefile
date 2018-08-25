@@ -26,7 +26,7 @@ CPPFLAGS += -Iinclude
 compile_commands.json: $(COMPDB)
 
 # Depend on buildflags
-$(objects) $(compdb): buildflags.mk
+$(OBJECTS) $(compdb): buildflags.mk
 
 # Build Instructions
 .SECONDEXPANSION:
