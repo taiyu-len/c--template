@@ -1,0 +1,3 @@
+target:=
+shared:=
+static:=
