@@ -4,11 +4,11 @@
 #include <algorithm>
 #include <cstring>
 
-int real_main(int argc, char **argv);
+int DOCTEST_REAL_MAIN(int argc, char **argv);
 int main(int argc, char**argv) {
 	auto context = doctest::Context(argc, argv);
 	auto result = context.run();
-	if (result || context.shouldExit()) {
+	if (result != 0 || context.shouldExit()) {
 		return result;
 	}
 	// Filter out doctest arguments.
@@ -19,6 +19,7 @@ int main(int argc, char**argv) {
 	*last_arg = nullptr;
 
 	// Call real main with remaining arguments
-	return real_main(last_arg - argv, argv);
+	return DOCTEST_REAL_MAIN(last_arg - argv, argv);
 }
+
 

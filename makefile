@@ -1,10 +1,6 @@
 -include targets.mk    # Userdefined Targets.
 -include buildflags.mk # Userdefined Build Flags
-.LIBPATTERNS:=
-.PHONY: all clean cleanall
-.SECONDARY: $(static:%=-l%) $(shared:%=-l%) $(shared) $(static)
-.DEFAULT_GOAL:=all
-all: $(target)
+all: $(target) compile_commands.json
 
 SOURCES != find src     -regextype awk -regex '.*\.(c|cc|cpp)'
 HEADERS != find include -regextype awk -regex '.*\.(h|hh|hpp)'
@@ -15,23 +11,38 @@ PATTERN := %
 LDFLAGS += -L $(realpath .)
 CPPFLAGS += -Iinclude
 
+.LIBPATTERNS:=
+.PHONY: all clean mostlyclean
+.SECONDARY: $(static:%=-l%) $(shared:%=-l%) $(shared) $(static)
+.SECONDARY: $(COMPDB) $(OBJECTS)
+.DEFAULT_GOAL:=all
+
 # Generate Dependencies
+ifeq ($(MAKECMDGOALS),clean)
+else ifeq ($(MAKECMDGOALS),mostlyclean)
+else
 -include $(DEPENDS)
 %.d: %.c;   @$(CC)  $(CPPFLAGS) $< -MM -MT $*.o -MT $@ > $@
 %.d: %.cc;  @$(CXX) $(CPPFLAGS) $< -MM -MT $*.o -MT $@ > $@
 %.d: %.cpp; @$(CXX) $(CPPFLAGS) $< -MM -MT $*.o -MT $@ > $@
+endif
 
 # Generate compile_commands.json
 -include compdb.mk
 compile_commands.json: $(COMPDB)
 
 # Depend on buildflags
-$(OBJECTS) $(compdb): buildflags.mk
+$(OBJECTS) $(COMPDB): buildflags.mk
 
 # Build Instructions
 .SECONDEXPANSION:
 $(target): $$(filter src/$$@/%,$(OBJECTS))
 	$(LINK.o) $^ $(LDLIBS) -o $@
+
+test: export LD_LIBRARY_PATH=$(CURDIR)
+test: $(addprefix test_, $(tested))
+test_%: %
+	./$* $(TEST_FLAGS)
 
 # Shared Library Dependency chain
 -l%: lib%.so;
@@ -39,14 +50,15 @@ $(shared:%=lib%.so): lib%.so: $$*;
 $(shared): CXXFLAGS += -fPIC
 $(shared): $$(filter src/$$@/%,$(OBJECTS))
 	$(LINK.o) -shared -Wl,-soname,lib$@.so $^ $(LDLIBS) -o lib$@.so
+
 # Static Library Dependency chain
 -l%: lib%.a;
 $(static:%=lib%.a) : lib%.a : $$*;
 $(static): $$(filter src/$$@/%,$(OBJECTS))
 	$(AR) $(ARFLAGS) lib$@.a $?
 
-clean:
-	@rm -f $(OBJECTS) $(DEPENDS) $(target) $(shared:%=lib%.so) $(static:%=lib%.a)
-cleanall: clean
-	@rm -f $(COMPDB) compile_commands.json
-
+mostlyclean:
+	@rm -f $(OBJECTS) $(DEPENDS) $(COMPDB)
+clean: mostlyclean
+	@rm -f compile_commands.json $(target)
+	@rm -f $(shared:%=lib%.so) $(static:%=lib%.a)
