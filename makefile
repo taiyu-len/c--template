@@ -8,8 +8,8 @@ OBJECTS := $(addsuffix .o,$(basename $(SOURCES)))
 DEPENDS := $(addsuffix .d,$(basename $(SOURCES)))
 COMPDB  := $(addsuffix .compdb,$(SOURCES) $(HEADERS))
 PATTERN := %
-LDFLAGS += -L $(realpath .)
-CPPFLAGS += -Iinclude
+override LDFLAGS += -L $(realpath .)
+override CPPFLAGS += -Iinclude -Isrc
 
 .LIBPATTERNS:=
 .PHONY: all clean mostlyclean
@@ -47,7 +47,7 @@ test_%: %
 # Shared Library Dependency chain
 -l%: lib%.so;
 $(shared:%=lib%.so): lib%.so: $$*;
-$(shared): CXXFLAGS += -fPIC
+$(shared): override CXXFLAGS += -fPIC
 $(shared): $$(filter src/$$@/%,$(OBJECTS))
 	$(LINK.o) -shared -Wl,-soname,lib$@.so $^ $(LDLIBS) -o lib$@.so
 
@@ -56,6 +56,15 @@ $(shared): $$(filter src/$$@/%,$(OBJECTS))
 $(static:%=lib%.a) : lib%.a : $$*;
 $(static): $$(filter src/$$@/%,$(OBJECTS))
 	$(AR) $(ARFLAGS) lib$@.a $?
+
+# Profiling support.
+profile-generate profile-use: % :
+	@$(MAKE) clean
+	@$(MAKE) all CXXFLAGS=-f$*
+
+# static analysis
+clang-check: $(SOURCES)
+	@clang-check $^
 
 mostlyclean:
 	@rm -f $(OBJECTS) $(DEPENDS) $(COMPDB)
